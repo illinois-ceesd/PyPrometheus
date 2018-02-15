@@ -1,0 +1,11 @@
+src/*~
+include/*~
+build/*~
+test/*~
+run/*~
+run/ctis/*~
+run/outputData/*~
+run/outputData/*.nb  
+
+build/*.o
+build/*.exe
