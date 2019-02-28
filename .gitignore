@@ -2,10 +2,12 @@ apps/
 ffm/
 src/wolfChemGen.cpp
 src/*~
+include/wolfChemGen.h
 include/*~
 build/*~
 test/*~
 run/*~
+run/*.exe
 run/ctis/*~
 run/outputData/
 run/outputData/*~

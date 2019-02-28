@@ -21,8 +21,8 @@ int main(int argc, char** argv) {
   bool ooriented    = cgopts.ooriented();
   bool templated    = cgopts.templated();
   std::string  mech = cgopts.mech();
-  std::string  ctif = "ctis/"+mech+".xml";
-  Cantera::IdealGasMix gas(ctif,"gas");
+  std::string  ctif = "ctis/" + mech + ".cti";
+  Cantera::IdealGasMix gas( ctif, "gas" );
 
   /* run solver */
   chemGen gen( ooriented, templated, mech, gas );

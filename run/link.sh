@@ -1,2 +1,2 @@
 rm -f *.exe
-ln -sf ../build/*.exe .
+ln -sf ../build/chemGen.exe .
