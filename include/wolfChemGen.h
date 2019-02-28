@@ -3,33 +3,18 @@
 #include "cantera/thermo/speciesThermoTypes.h"
 #include "utils.h"
 
-class chemGen
+class wolfChemGen
 {
  public:
     
-  chemGen(bool& ooriented, bool& templated, std::string& mech, Cantera::IdealGasMix& gas) {
+  wolfChemGen(std::string& mech, Cantera::IdealGasMix& gas) {
     m_gas  = &gas;
     m_mech = mech;
-    m_ooriented = ooriented;
-    m_templated = templated;
-    if( m_templated == true ) {
-      m_baseType = "ModelType";
-      m_dataType = "DataType";      
-    } else {
-      m_baseType = "double";
-      m_dataType = "double";
-    }
   };
 
   void greetings();
   
   void writeMech();
-
-  void writeDefs(std::ostream& out);
-
-  void writeKineticsHeader(std::ostream& out);
-
-  void writeThermoHeader(std::ostream& out);
 
   void writeKinetics(std::ostream& out);
   
@@ -57,8 +42,6 @@ class chemGen
 
   void writeEquilibriumConstants(std::ostream& out);
 
-  void writeNewtonTemperature(std::ostream& out);
-
   void getThirdBodyEfficiencies(std::shared_ptr<Cantera::Reaction>& reaction,
 				std::vector<std::vector<double> >& tbrEfficiencies);
   
@@ -67,17 +50,9 @@ class chemGen
 			       std::vector<int>& prodIndices);
 
   int nFalloff();
-
-  void writeFunctionName(std::ostream& out,
-			 const std::string& className,
-			 const std::string& funName);
   
  private:
-  bool        m_ooriented;
-  bool        m_templated;
   std::string m_mech;
-  std::string m_baseType;
-  std::string m_dataType;
   std::map<int, std::vector<std::string> > m_rhs;
   Cantera::IdealGasMix* m_gas;
     

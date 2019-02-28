@@ -1,13 +1,60 @@
 #include "chemGen.h"
 
-void chemGen::writeMech(std::ostream& out) {
+void chemGen::greetings() {
 
+  std::cout.setf(std::ios::scientific);
+  std::cout.precision(6);
+
+  std::cout << "Welcome to chemGen..." << std::endl;
+  std::cout << "Working with " << m_mech << " mech..." << std::endl;
+  std::cout << "Number of species:   " << m_gas->nSpecies()   << std::endl;
+  std::cout << "Number of elements:  " << m_gas->nElements()  << std::endl;
+  std::cout << "Number of reactions: " << m_gas->nReactions() << std::endl;
+  std::cout << "The implementation will ";
+  if( m_ooriented == false ) { std::cout << "not "; }
+  std::cout << "be object-oriented..." << std::endl;
+  std::cout << "The implementation will ";
+  if( m_templated == false ) { std::cout << "not "; }
+  std::cout << "be templated..." << std::endl;
+  
+}
+
+void chemGen::writeMech() {
+
+  std::string   filename;
+  std::ofstream out;
   out.setf(std::ios::scientific);
   out.precision(6);
 
-  writeDefs(out);
+  greetings();
+
+  /* thermo */
+  if( m_ooriented == true ) {
+
+    filename = m_mech+"Thermo.h";
+    out.open( filename.c_str() );
+    writeThermoHeader( out );
+    
+  } else {
+
+    filename = m_mech+".cpp";
+    out.open( filename.c_str() );
+    writeDefs( out );
+    
+  }
+
   writeThermo(out);
-  writeKinetics(out);
+
+  /* kinetics */
+  if( m_ooriented == true ) {
+
+    out.close();
+    filename = m_mech+"Kinetics.h";
+    out.open( filename.c_str() );
+    writeKineticsHeader( out );
+  }
+  
+  writeKinetics( out );
   
 }
 
@@ -43,6 +90,251 @@ void chemGen::writeDefs(std::ostream& out) {
   
 }
 
+void chemGen::writeKineticsHeader(std::ostream& out) {
+
+  int ii = m_gas->nReactions();
+  int ff = nFalloff();
+
+  out << "#ifndef MECH_THERMO" << std::endl;
+  out << "#define MECH_THERMO" << std::endl;
+
+  out << "include <cmath>" << std::endl;
+  out << "include <vector>" << std::endl;
+  out << "include \"gasThermo.h\"" << std::endl;
+  out  << std::endl;
+
+  out << "namespace mech {" << std::endl;
+  out << std::endl;
+  out << "  template <class ModelType>" << std::endl;
+  out << "    class GasKinetics {" << std::endl;
+  out << std::endl;
+  out << "  public:" << std::endl;
+  out << std::endl;
+  out << "  GasKinetics() : "
+      << "m_ii(" << ii << "), "
+      << "m_ff(" << ff << ") {" << std::endl;
+  out << std::endl;
+
+  for(int i = 0; i < ii; ++i) {
+    out << "      m_reactionString[" << i << "] = \"";
+    out << m_gas->reactionString(i) << "\";"
+	<< std::endl;    
+  }
+  
+  out << std::endl;
+  out << "    }" << std::endl;
+  out << std::endl;
+  
+  out << "    int nReactions() { return m_ii; }"  << std::endl;
+  out << std::endl;
+  out << "    int nFalloff() { return m_ff; }" << std::endl;
+  out << std::endl;
+  
+  
+}
+
+void chemGen::writeThermoHeader(std::ostream& out) {
+
+  int mm = m_gas->nElements();
+  int kk = m_gas->nSpecies();
+  std::vector<double> mw( kk, 0.0 );
+  m_gas->getMolecularWeights( &mw[0] );
+  
+
+  out << "#ifndef MECH_THERMO" << std::endl;
+  out << "#define MECH_THERMO" << std::endl;
+  out << std::endl;
+  
+  out << "#include <cmath>" << std::endl;
+  out << "#include <vector>" << std::endl;
+  out << "#include <Eigen/Dense>" << std::endl;
+  out << "#include <cppad/cppad.hpp>" << std::endl;
+  out << "#include mechDefs.h" << std::endl;
+  out << std::endl;
+
+  out << "namespace mech {" << std::endl;
+  out << std::endl;
+  out << "  template <class ModelType>" << std::endl;
+  out << "    class GasThermo {" << std::endl;
+  out << std::endl;
+  out << "  public:" << std::endl;
+  out << std::endl;
+  out << "  GasThermo() : "
+      << "m_kk(" << kk << "), "
+      << "m_mm(" << mm << ") {"
+      << std::endl;
+  out << std::endl;
+
+  out << "      m_mw.resize( m_kk );" << std::endl;
+  out << "      m_y0.resize( m_kk );" << std::endl;
+  out << "      m_Emat.setZero( m_kk, m_mm );" << std::endl;
+  out << std::endl;
+  for(int k = 0; k < kk; ++k) {
+    out << "      m_speciesIndex[\""
+	<< m_gas->speciesName(k) << "\"] = "
+	<< k << ";"
+	<< std::endl;
+  }
+  out << std::endl;
+  for(int k = 0; k < kk; ++k) {
+    out << "      m_speciesName[" << k << "] = \""
+	<< m_gas->speciesName(k) << "\";"
+	<< std::endl;
+  }
+  out << std::endl;
+  for(int k = 0; k < kk; ++k) {
+    out << "      m_mw[" << k << "] = " << mw[k] << ";" << std::endl;
+  }
+  out << std::endl;
+  for(int k = 0; k < kk; ++k) {
+    for(int m = 0; m < mm; ++m) {
+      out << "      m_Emat(" << k << "," << m << ") = "
+	  << m_gas->nAtoms( k, m ) << ";"
+	  << std::endl;
+    }
+    out << std::endl;
+  }
+  out << std::endl;
+  out << "    }" << std::endl;
+  out << std::endl;
+
+  out << "    int nSpecies() { return m_kk; }" << std::endl;
+  out << std::endl;
+  out << "    int nElements() { return m_mm; }" << std::endl;
+  out << std::endl;
+  out << "    int nVariables() { return m_kk; }" << std::endl;
+  out << std::endl;
+  out << "    int nConserved() { return m_mm; }" << std::endl;
+  out << std::endl;
+  out << "    ModelType temperature() { return m_T; }" << std::endl;
+  out << std::endl;
+  out << "    ModelType pressure() { return m_p; }" << std::endl;
+  out << std::endl;
+  out << "    ModelType enthalpy() { return m_h; }" << std::endl;
+  out << std::endl;
+  out << "    std::vector<double> molecularWeights() { return m_mw; }" << std::endl;
+  out << std::endl;
+  out << "    std::vector<ModelType> initialMassFractions() { return m_y0; }" << std::endl;
+  out << std::endl;
+  out << "    void setTemperature(ModelType& T);" << std::endl;
+  out << std::endl;
+  out << "    void setPressrure(ModelType& p);" << std::endl;
+  out << std::endl;
+  out << "    void setEnthalpyMass(ModelType& T0, std::vector<ModelType>& x0);" << std::endl;
+  out << std::endl;
+  out << "    void moleToMassFractions(std::vector<ModelType>& x, std::vector<ModelType>& y);"
+      << std::endl;
+  out << std::endl;
+  out << "    void setInitialState_TPPhi(std::string& fuel,"    << std::endl;
+  out << "                               std::string& diluent," << std::endl;
+  out << "                               ModelType& T0,"        << std::endl;
+  out << "                               ModelType& p,"         << std::endl;
+  out << "                               ModelType& phi);"      << std::endl;
+  out << std::endl;
+  out << "    void setInitialState_TPX(ModelType& T0,"           << std::endl;
+  out << "                             ModelType& p,"            << std::endl;
+  out << "                             std::vector<double>& x);" << std::endl;
+  out << std::endl;
+  out << "    template<class DataType>" << std::endl;
+  out << "      void getDensity(DataType& T," << std::endl;
+  out << "                      std::vector<DataType>& y," << std::endl;
+  out << "                      DataType& rho);" << std::endl;
+  out << std::endl;
+  out << "    template<class DataType>" << std::endl;
+  out << "      void getTemperature(ModelType& Told," << std::endl;
+  out << "                          std::vector<DataType>& y," << std::endl;
+  out << "                          DataType& T);" << std::endl;
+  out << std::endl;
+  out << "    template<class DataType>" << std::endl;
+  out << "      void getSpecificHeats_R(DataType& T," << std::endl;
+  out << "                              std::vector<DataType>& cp0_R);" << std::endl;
+  out << std::endl;
+  out << "    template<class DataType>" << std::endl;
+  out << "      void getEnthalpies_RT(DataType& T," << std::endl;
+  out << "                            std::vector<DataType>& h0_RT);" << std::endl;
+  out << std::endl;
+  out << "    template<class DataType>" << std::endl;
+  out << "      void getEntropies_R(DataType& T," << std::endl;
+  out << "                          std::vector<DataType>& s0_R);" << std::endl;
+  out << std::endl;
+  out << "    template<class DataType>" << std::endl;
+  out << "      void getGibbsFunctions_RT(DataType& T," << std::endl;
+  out << "                                std::vector<DataType>& g0_RT);" << std::endl;
+  out << std::endl;
+  out << "    template<class DataType>" << std::endl;
+  out << "      void getEquilibriumConstants(DataType& T," << std::endl;
+  out << "                                   std::vector<DataType>& keq);" << std::endl;
+  out << std::endl;
+  
+  out << "  protected:" << std::endl;
+  out << "   int m_kk;" << std::endl;
+  out << "   int m_mm;" << std::endl;
+  out << "   ModelType                 m_T;" << std::endl;
+  out << "   ModelType                 m_p;" << std::endl;
+  out << "   ModelType                 m_h;" << std::endl;
+  out << "   std::vector<double>       m_mw;" << std::endl;
+  out << "   std::vector<ModelType>    m_y0;" << std::endl;
+  out << "   Eigen::MatrixXd           m_Emat;" << std::endl;
+  out << "   std::map<std::string,int> m_speciesIndex;" << std::endl;
+  out << std::endl;
+  out << "  };" << std::endl;
+  out << std::endl;
+  
+  // out << "  template<class ModelType>" << std::endl;
+  // out << "    void GasThermo<ModelType>::setTemperature(ModelType& T) { m_T = T; };"
+  //     << std::endl;
+  // out << std::endl;
+  
+  // out << "  template<class ModelType>" << std::endl;
+  // out << "    void GasThermo<ModelType>::setPressure(ModelType& p) { m_p = p; };"
+  //     << std::endl;
+  
+  // out << "  template<class ModelType>" << std::endl;
+  // out << "    void GasThermo<ModelType>::setEnthalpyMass(ModelType& T0," << std::endl;
+  // out << "					       std::vector<ModelType>& x0) {"
+  //     << std::endl;
+  // out << std::endl;  
+  // out << "    ModelType              RT = GasConstant * T0;" << std::endl;
+  // out << "    std::vector<ModelType> hk( m_kk, 0.0 );" << std::endl;
+  // out << std::endl;
+  // out << "    m_h = 0.0;" << std::endl;
+  // out << std::endl;
+  // out << "    moleToMassFractions( x0, m_y0 );" << std::endl;
+  // out << std::endl;
+  // out << "    getEnthalpies_RT( T0, hk );" << std::endl;
+  // out << "    for(int k = 0; k < m_kk; ++k) {" << std::endl;
+  // out << "      hk[k] = RT * hk[k];" << std::endl;
+  // out << "      m_h  += hk[k] * m_y0[k] / m_mw[k];" << std::endl;
+  // out << "    }" << std::endl;
+  // out << std::endl;
+  // out << "  };" << std::endl;
+  // out << std::endl;
+
+  // out << "  template<class ModelType>" << std::endl;
+  // out << "    void GasThermo<ModelType>::moleToMassFractions(std::vector<ModelType>& x,"
+  //     << std::endl;
+  // out << "						   std::vector<ModelType>& y) {"
+  //     << std::endl;
+  // out << std::endl;
+  // out << "   ModelType xk;  " << std::endl;
+  // out << "   ModelType mmw = 0.0;" << std::endl;
+  // out << std::endl;
+  // out << "    for(int k = 0; k < m_kk; ++k) {" << std::endl;
+  // out << "      xk = std::max( x[k], 0.0 );" << std::endl;
+  // out << "      y[k]  = xk;" << std::endl;
+  // out << "      mmw  += m_mw[k] * xk;" << std::endl;
+  // out << "    }" << std::endl;
+  // out << std::endl;
+  // out << "  };" << std::endl;
+  // out << std::endl;
+  // out << "  template<class ModelType>" << std::endl;
+  // out << "    void GasThermo<ModelType>::setInitialState_TPPhi(ModelType& T0," << std::endl;
+  // out << "						     ModelType& p," << std::endl;
+  // out << "						     ModelType& phi) {" << std::endl;
+  // out << std::endl;
+  
+}
+
 void chemGen::writeKinetics(std::ostream& out) {
 
   writeFalloffKinetics(out);
@@ -54,11 +346,22 @@ void chemGen::writeKinetics(std::ostream& out) {
 
 void chemGen::writeThermo(std::ostream& out) {
 
+  std::cout << "\t ... Writing specific heats ... " << std::endl;
   writeSpeciesSpecificHeats(out);
+
+  std::cout << "\t ... Writing enthalpies ... " << std::endl;
   writeSpeciesEnthalpies(out);
+
+  std::cout << "\t ... Writing entropies ... " << std::endl;
   writeSpeciesEntropies(out);
+
+  std::cout << "\t ... Writing gibbs functions ... " << std::endl;
   writeSpeciesGibbs(out);
+
+  std::cout << "\t ... Writing equilibrium constants ... " << std::endl;
   writeEquilibriumConstants(out);
+
+  std::cout << "\t ... Writing Newton method for temperature inversion ... " << std::endl;
   writeNewtonTemperature(out);
   
   
@@ -73,7 +376,7 @@ void chemGen::writeFalloffKinetics(std::ostream& out) {
   std::shared_ptr<Cantera::Reaction>        reaction;
   std::shared_ptr<Cantera::FalloffReaction> work;
 
-  if( m_temp == true ) { out << "  template <class Type>" << std::endl; }
+  if( m_templated == true ) { out << "  template <class Type>" << std::endl; }
   out << "  void getFalloffRates(" << m_baseType << "& T, std::vector<" << m_baseType << ">& C,";
   out << " std::vector<" << m_baseType << ">& kfwd) {" << std::endl;
   out << std::endl;
@@ -246,7 +549,7 @@ void chemGen::writeRateCoefficients(std::ostream& out) {
   std::vector<std::vector<double> >  tbrEfficiencies;
   std::shared_ptr<Cantera::Reaction> reaction;
 
-  if( m_temp == true ) { out << "  template <class Type>" << std::endl; }
+  if( m_templated == true ) { out << "  template <class Type>" << std::endl; }
   out << "  void getRateCoefficients(" << m_baseType
       << "& T, std::vector<" << m_baseType << ">& C,";
   out << " std::vector<" << m_baseType << ">& kfwd, std::vector<"
@@ -338,7 +641,7 @@ void chemGen::writeNetRatesOfProgress(std::ostream& out) {
   std::vector<int> prodIndices;
   std::shared_ptr<Cantera::Reaction> reaction;
 
-  if( m_temp == true ) { out << "  template <class Type>" << std::endl; }
+  if( m_templated == true ) { out << "  template <class Type>" << std::endl; }
   out << "  void getNetRatesOfProgress(" << m_baseType << "& T, std::vector<"
       << m_baseType << ">& C, std::vector<" << m_baseType << ">& Rnet) {";
   out << std::endl;
@@ -392,7 +695,7 @@ void chemGen::writeNetProductionRates(std::ostream& out) {
     m_rhs.insert( std::pair<int, std::vector<std::string> >(k, std::vector<std::string>()) );
   }
 
-  if( m_temp == true ) { out << "  template <class Type>" << std::endl; }
+  if( m_templated == true ) { out << "  template <class Type>" << std::endl; }
   out << "  void getNetProductionRates(double& p, " << m_baseType << "& T, std::vector<"
       << m_baseType << ">& y, std::vector<" << m_baseType << ">& omega) {";
   out << std::endl;
@@ -455,18 +758,26 @@ void chemGen::writeSpeciesSpecificHeats(std::ostream& out) {
   double maxTemp;
   double refPres;
   std::vector<double>  c(15);
-  std::vector<double> c9(34);
+  std::vector<double> c9(200);
+  //std::vector<double> c9(34);
 
-  if( m_temp == true ) { out << "  template <class Type>" << std::endl; }
-  out << "  void getSpecificHeats_R(" << m_baseType << "& T, std::vector<"
-      << m_baseType << ">& cp0_R) {" << std::endl;
+  /* write function name */
+  writeFunctionName( out, "GasThermo", "getSpecificHeats_R" );
+
+  /* arguments */
+  out << "(";
+  out << m_dataType << "& T, std::vector<"
+      << m_dataType << ">& cp0_R";
+  out << ") {" << std::endl;
+
+  /* declarations */
   out << std::endl;
-  out << "    " << m_baseType << " tt0 = T;"       << std::endl;
-  out << "    " << m_baseType << " tt1 = T * tt0;" << std::endl;
-  out << "    " << m_baseType << " tt2 = T * tt1;" << std::endl;
-  out << "    " << m_baseType << " tt3 = T * tt2;" << std::endl;
-  out << "    " << m_baseType << " tt4 = 1.0 / T;"             << std::endl;
-  out << "    " << m_baseType << " tt5 = tt4 / T;"             << std::endl;
+  out << "    " << m_dataType << " tt0 = T;"       << std::endl;
+  out << "    " << m_dataType << " tt1 = T * tt0;" << std::endl;
+  out << "    " << m_dataType << " tt2 = T * tt1;" << std::endl;
+  out << "    " << m_dataType << " tt3 = T * tt2;" << std::endl;
+  out << "    " << m_dataType << " tt4 = 1.0 / T;" << std::endl;
+  out << "    " << m_dataType << " tt5 = tt4 / T;" << std::endl;
   out << std::endl;
 
   for(int k = 0; k < m_gas->nSpecies(); ++k) {
@@ -476,7 +787,7 @@ void chemGen::writeSpeciesSpecificHeats(std::ostream& out) {
     if(type == NASA) { 
 
       m_gas->thermo().speciesThermo().reportParams(k, type, &c[0], minTemp, maxTemp, refPres);
-
+      
       out << "    if(tt0 > " << c[0] << ") {" << std::endl;
       out << "      " << fmt("cp0_R", k) << " = ";
       writeCoeffTimesVar(false, c[1], "", out);
@@ -496,10 +807,11 @@ void chemGen::writeSpeciesSpecificHeats(std::ostream& out) {
       out << "    };" << std::endl;
       out << std::endl;
 
-    } else if(type == NASA9MULTITEMP) {
+    } else if(type == NASA9) {
 
       m_gas->thermo().speciesThermo().reportParams(k, type, &c9[0], minTemp, maxTemp, refPres);
 
+      /* write out single zone */
       out << "    if(tt0 > " << c9[1] << " && tt0 < " << c9[2] << ") {" << std::endl;
       out << "      " << fmt("cp0_R", k) << " = ";
       writeCoeffTimesVar(false, c9[5],  "", out);
@@ -510,26 +822,49 @@ void chemGen::writeSpeciesSpecificHeats(std::ostream& out) {
       writeCoeffTimesVar(true,  c9[3],  " * tt5", out);
       writeCoeffTimesVar(true,  c9[4],  " * tt4;", out);
       out << std::endl;
-      out << "    } else if(tt0 > " << c9[12] << " && tt0 < " << c9[13] <<  ") {" << std::endl;
-      out << "      " << fmt("cp0_R", k) << " = ";
-      writeCoeffTimesVar(false, c9[16], "", out);
-      writeCoeffTimesVar(true,  c9[17], " * tt0",  out);
-      writeCoeffTimesVar(true,  c9[18], " * tt1", out);
-      writeCoeffTimesVar(true,  c9[19], " * tt2", out);
-      writeCoeffTimesVar(true,  c9[20], " * tt3", out);
-      writeCoeffTimesVar(true,  c9[14], " * tt5", out);
-      writeCoeffTimesVar(true,  c9[15], " * tt4;", out);
+      out << "    };" << std::endl;
       out << std::endl;
-      out << "    } else if(tt0 > " << c9[23] << " && tt0 < " << c9[24] << ") {" << std::endl;
+
+    } else if(type == NASA9MULTITEMP) {
+
+      m_gas->thermo().speciesThermo().reportParams(k, type, &c9[0], minTemp, maxTemp, refPres);
+
+      int nzones = c9[0];
+
+      /* write out zone 1 */
+      out << "    if(tt0 > " << c9[1] << " && tt0 < " << c9[2] << ") {" << std::endl;
       out << "      " << fmt("cp0_R", k) << " = ";
-      writeCoeffTimesVar(false, c9[27], "", out);
-      writeCoeffTimesVar(true,  c9[28], " * tt0",  out);
-      writeCoeffTimesVar(true,  c9[29], " * tt1", out);
-      writeCoeffTimesVar(true,  c9[30], " * tt2", out);
-      writeCoeffTimesVar(true,  c9[31], " * tt3", out);
-      writeCoeffTimesVar(true,  c9[25], " * tt5", out);
-      writeCoeffTimesVar(true,  c9[26], " * tt4;", out);
+      writeCoeffTimesVar(false, c9[5],  "", out);
+      writeCoeffTimesVar(true,  c9[6],  " * tt0", out);
+      writeCoeffTimesVar(true,  c9[7],  " * tt1", out);
+      writeCoeffTimesVar(true,  c9[8],  " * tt2", out);
+      writeCoeffTimesVar(true,  c9[9],  " * tt3", out);
+      writeCoeffTimesVar(true,  c9[3],  " * tt5", out);
+      writeCoeffTimesVar(true,  c9[4],  " * tt4;", out);
       out << std::endl;
+
+      /* write out other zones */
+      for(int z = 1; z < nzones; ++z) { 
+
+	int minTempIdx = 11 * z + 1;
+	int maxTempIdx = 11 * z + 2;	
+
+	out << "    } else if(tt0 > " << c9[ minTempIdx ]
+	    << " && tt0 < " << c9[ maxTempIdx ]
+	    <<  ") {" << std::endl;
+	
+	out << "      " << fmt("cp0_R", k) << " = ";
+	writeCoeffTimesVar(false, c9[ maxTempIdx + 3 ], "", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 4 ], " * tt0",  out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 5 ], " * tt1", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 6 ], " * tt2", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 7 ], " * tt3", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 1 ], " * tt5", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 2 ], " * tt4;", out);
+	out << std::endl;
+
+      }
+
       out << "    };" << std::endl;
       out << std::endl;
       
@@ -549,20 +884,28 @@ void chemGen::writeSpeciesEnthalpies(std::ostream& out) {
   double maxTemp;
   double refPres;
   std::vector<double>  c(15);
-  std::vector<double> c9(34);
+  std::vector<double> c9(200);
 
-  if( m_temp == true ) { out << "  template <class Type>" << std::endl; }
-  out << "  void getEnthalpies_RT(" << m_baseType << "& T, std::vector<"
-      << m_baseType << ">& h0_RT) {" << std::endl;
+  /* write function name */
+  writeFunctionName( out, "GasThermo", "getEnthalpies_RT" );
+
+  /* arguments */
+  out << "(";
+  out << m_dataType << "& T, std::vector<"
+      << m_dataType << ">& h0_RT";
+  out << ") {" << std::endl;
+
+  /* declarations */
+  out << "    " << m_dataType << " tt0 = T;"                   << std::endl;
+  out << "    " << m_dataType << " tt1 = T * tt0;"             << std::endl;
+  out << "    " << m_dataType << " tt2 = T * tt1;"             << std::endl;
+  out << "    " << m_dataType << " tt3 = T * tt2;"             << std::endl;
+  out << "    " << m_dataType << " tt4 = 1.0 / T;"             << std::endl;
+  out << "    " << m_dataType << " tt5 = tt4 / T;"             << std::endl;
+  out << "    " << m_dataType << " tt6 = std::log(tt0) * tt4;" << std::endl;
   out << std::endl;
-  out << "    " << m_baseType << " tt0 = T;"                   << std::endl;
-  out << "    " << m_baseType << " tt1 = T * tt0;"             << std::endl;
-  out << "    " << m_baseType << " tt2 = T * tt1;"             << std::endl;
-  out << "    " << m_baseType << " tt3 = T * tt2;"             << std::endl;
-  out << "    " << m_baseType << " tt4 = 1.0 / T;"             << std::endl;
-  out << "    " << m_baseType << " tt5 = tt4 / T;"             << std::endl;
-  out << "    " << m_baseType << " tt6 = std::log(tt0) * tt4;" << std::endl;
-  out << std::endl;
+
+  /* write out the code */
 
   for(int k = 0; k < m_gas->nSpecies(); ++k) {
 
@@ -593,14 +936,13 @@ void chemGen::writeSpeciesEnthalpies(std::ostream& out) {
       out << "    };" << std::endl;
       out << std::endl;
 
-    } else if(type == NASA9MULTITEMP) {
+    } else if(type == NASA9) {
 
       m_gas->thermo().speciesThermo().reportParams(k, type, &c9[0], minTemp, maxTemp, refPres);
 
-      c9[3]  = (-1) * c9[3];
-      c9[14] = (-1) * c9[14];
-      c9[25] = (-1) * c9[25];
-      
+      c9[3] *= -1.0;
+
+      /* write single zone */
       out << "    if(tt0 > " << c9[1] << " && tt0 < " << c9[2] << ") {" << std::endl;
       out << "      " << fmt("h0_RT", k) << " = ";
       writeCoeffTimesVar(false, c9[5],  "", out);
@@ -612,28 +954,55 @@ void chemGen::writeSpeciesEnthalpies(std::ostream& out) {
       writeCoeffTimesVar(true,  c9[3],  " * tt5", out);
       writeCoeffTimesVar(true,  c9[4],  " * tt6;", out);
       out << std::endl;
-      out << "    } else if(tt0 > " << c9[12] << " && tt0 < " << c9[13] <<  ") {" << std::endl;
-      out << "      " << fmt("h0_RT", k) << " = ";
-      writeCoeffTimesVar(false, c9[16], "", out);
-      writeCoeffTimesVar(true,  c9[17], " * 0.50 * tt0",  out);
-      writeCoeffTimesVar(true,  c9[18], " * OneThird * tt1", out);
-      writeCoeffTimesVar(true,  c9[19], " * 0.25 * tt2", out);
-      writeCoeffTimesVar(true,  c9[20], " * 0.20 * tt3", out);
-      writeCoeffTimesVar(true,  c9[21], " * tt4", out);
-      writeCoeffTimesVar(true,  c9[14], " * tt5", out);
-      writeCoeffTimesVar(true,  c9[15], " * tt6;", out);
+      out << "    };" << std::endl;
       out << std::endl;
-      out << "    } else if(tt0 > " << c9[23] << " && tt0 < " << c9[24] << ") {" << std::endl;
+
+    } else if(type == NASA9MULTITEMP) {
+
+      m_gas->thermo().speciesThermo().reportParams(k, type, &c9[0], minTemp, maxTemp, refPres);
+
+      int nzones = c9[0];
+      
+      c9[3] *= -1.0;      
+
+      /* write zone 1 */
+      out << "    if(tt0 > " << c9[1] << " && tt0 < " << c9[2] << ") {" << std::endl;
       out << "      " << fmt("h0_RT", k) << " = ";
-      writeCoeffTimesVar(false, c9[27], "", out);
-      writeCoeffTimesVar(true,  c9[28], " * 0.50 * tt0",  out);
-      writeCoeffTimesVar(true,  c9[29], " * OneThird * tt1", out);
-      writeCoeffTimesVar(true,  c9[30], " * 0.25 * tt2", out);
-      writeCoeffTimesVar(true,  c9[31], " * 0.20 * tt3", out);
-      writeCoeffTimesVar(true,  c9[32], " * tt4", out);
-      writeCoeffTimesVar(true,  c9[25], " * tt5", out);
-      writeCoeffTimesVar(true,  c9[26], " * tt6;", out);
+      writeCoeffTimesVar(false, c9[5],  "", out);
+      writeCoeffTimesVar(true,  c9[6],  " * 0.50 * tt0", out);
+      writeCoeffTimesVar(true,  c9[7],  " * OneThird * tt1", out);
+      writeCoeffTimesVar(true,  c9[8],  " * 0.25 * tt2", out);
+      writeCoeffTimesVar(true,  c9[9],  " * 0.20 * tt3", out);
+      writeCoeffTimesVar(true,  c9[10], " * tt4", out);
+      writeCoeffTimesVar(true,  c9[3],  " * tt5", out);
+      writeCoeffTimesVar(true,  c9[4],  " * tt6;", out);
       out << std::endl;
+
+      /* write out other zones */
+      for(int z = 1; z < nzones; ++z) {
+
+	int minTempIdx = 11 * z + 1;
+	int maxTempIdx = 11 * z + 2;
+
+	c9[ maxTempIdx + 1 ] *= -1.0;
+
+	out << "    } else if(tt0 > " << c9[ minTempIdx ]
+	    << " && tt0 < " << c9[ maxTempIdx ]
+	    <<  ") {" << std::endl;
+      
+	out << "      " << fmt("h0_RT", k) << " = ";
+	writeCoeffTimesVar(false, c9[ maxTempIdx + 3 ], "", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 4 ], " * 0.50 * tt0",  out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 5 ], " * OneThird * tt1", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 6 ], " * 0.25 * tt2", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 7 ], " * 0.20 * tt3", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 8 ], " * tt4", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 1 ], " * tt5", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 2 ], " * tt6;", out);
+	out << std::endl;
+	
+      }      
+      
       out << "    };" << std::endl;
       out << std::endl;
 
@@ -653,19 +1022,25 @@ void chemGen::writeSpeciesEntropies(std::ostream& out) {
   double maxTemp;
   double refPres;
   std::vector<double>  c(15);
-  std::vector<double> c9(34);
+  std::vector<double> c9(200);
 
-  if( m_temp == true ) { out << "  template <class Type>" << std::endl; }
-  out << "  void getEntropies_R(" << m_baseType << "& T, std::vector<"
-      << m_baseType << ">& s0_R) {" << std::endl;
-  out << std::endl;
-  out << "    " << m_baseType << " tt0 = T;"           << std::endl;
-  out << "    " << m_baseType << " tt1 = T * tt0;"     << std::endl;
-  out << "    " << m_baseType << " tt2 = T * tt1;"     << std::endl;
-  out << "    " << m_baseType << " tt3 = T * tt2;"     << std::endl;
-  out << "    " << m_baseType << " tt4 = 1.0 / T;"     << std::endl;
-  out << "    " << m_baseType << " tt5 = tt4 / T;"     << std::endl; 
-  out << "    " << m_baseType << " tt6 = std::log(T);" << std::endl;
+  /* write function name */
+  writeFunctionName( out, "GasThermo", "getEntropies_R" );
+
+  /* arguments */
+  out << "(";
+  out << m_dataType << "& T, std::vector<"
+      << m_dataType << ">& s0_R";
+  out << ") {" << std::endl;
+
+  /* declarations */
+  out << "    " << m_dataType << " tt0 = T;"           << std::endl;
+  out << "    " << m_dataType << " tt1 = T * tt0;"     << std::endl;
+  out << "    " << m_dataType << " tt2 = T * tt1;"     << std::endl;
+  out << "    " << m_dataType << " tt3 = T * tt2;"     << std::endl;
+  out << "    " << m_dataType << " tt4 = 1.0 / T;"     << std::endl;
+  out << "    " << m_dataType << " tt5 = tt4 / T;"     << std::endl; 
+  out << "    " << m_dataType << " tt6 = std::log(T);" << std::endl;
   out << std::endl;
 
   for(int k = 0; k < m_gas->nSpecies(); ++k) {
@@ -697,17 +1072,14 @@ void chemGen::writeSpeciesEntropies(std::ostream& out) {
       out << "    };" << std::endl;
       out << std::endl;
 
-    } else if(type == NASA9MULTITEMP) {
+    } else if(type == NASA9) {
 
       m_gas->thermo().speciesThermo().reportParams(k, type, &c9[0], minTemp, maxTemp, refPres);
 
-      c9[3]  = (-1) * c9[3];
-      c9[4]  = (-1) * c9[4];
-      c9[14] = (-1) * c9[14];
-      c9[15] = (-1) * c9[15];
-      c9[25] = (-1) * c9[25];
-      c9[26] = (-1) * c9[26];
+      c9[3] *= -1.0;
+      c9[4] *= -1.0;
 
+      /* write single zone */      
       out << "    if(tt0 > " << c9[1] << " && tt0 < " << c9[2] << ") {" << std::endl;
       out << "      " << fmt("s0_R", k) << " = ";
       writeCoeffTimesVar(false, c9[11], "", out);
@@ -719,28 +1091,57 @@ void chemGen::writeSpeciesEntropies(std::ostream& out) {
       writeCoeffTimesVar(true,  c9[3],  " * 0.50 * tt5", out);
       writeCoeffTimesVar(true,  c9[4],  " * tt4;", out);
       out << std::endl;
-      out << "    } else if(tt0 > " << c9[12] << " && tt0 < " << c9[13] <<  ") {" << std::endl;
-      out << "      " << fmt("s0_R", k) << " = ";
-      writeCoeffTimesVar(false, c9[22], "", out);
-      writeCoeffTimesVar(true,  c9[16], " * tt6",  out);
-      writeCoeffTimesVar(true,  c9[17], " * tt0", out);
-      writeCoeffTimesVar(true,  c9[18], " * 0.50 * tt1", out);
-      writeCoeffTimesVar(true,  c9[19], " * OneThird * tt2", out);
-      writeCoeffTimesVar(true,  c9[20], " * 0.25 * tt3", out);
-      writeCoeffTimesVar(true,  c9[14], " * 0.50 * tt5", out);
-      writeCoeffTimesVar(true,  c9[15], " * tt4;", out);
+      out << "    };" << std::endl;
       out << std::endl;
-      out << "    } else if(tt0 > " << c9[23] << " && tt0 < " << c9[24] << ") {" << std::endl;
+
+    } else if(type == NASA9MULTITEMP) {
+
+      m_gas->thermo().speciesThermo().reportParams(k, type, &c9[0], minTemp, maxTemp, refPres);
+
+      int nzones = c9[0];
+      
+      c9[3] *= -1.0;
+      c9[4] *= -1.0;
+
+      /* write out zone 1 */      
+      out << "    if(tt0 > " << c9[1] << " && tt0 < " << c9[2] << ") {" << std::endl;
       out << "      " << fmt("s0_R", k) << " = ";
-      writeCoeffTimesVar(false, c9[33], "", out);
-      writeCoeffTimesVar(true,  c9[27], " * tt6",  out);
-      writeCoeffTimesVar(true,  c9[28], " * tt0", out);
-      writeCoeffTimesVar(true,  c9[29], " * 0.50 * tt1", out);
-      writeCoeffTimesVar(true,  c9[30], " * OneThird * tt2", out);
-      writeCoeffTimesVar(true,  c9[31], " * 0.25 * tt3", out);
-      writeCoeffTimesVar(true,  c9[25], " * 0.50 * tt5", out);
-      writeCoeffTimesVar(true,  c9[26], " * tt4;", out);
+      writeCoeffTimesVar(false, c9[11], "", out);
+      writeCoeffTimesVar(true,  c9[5],  " * tt6", out);
+      writeCoeffTimesVar(true,  c9[6],  " * tt0", out);
+      writeCoeffTimesVar(true,  c9[7],  " * 0.50 * tt1", out);
+      writeCoeffTimesVar(true,  c9[8],  " * OneThird * tt2", out);
+      writeCoeffTimesVar(true,  c9[9],  " * 0.25 * tt3", out);
+      writeCoeffTimesVar(true,  c9[3],  " * 0.50 * tt5", out);
+      writeCoeffTimesVar(true,  c9[4],  " * tt4;", out);
       out << std::endl;
+
+      /* write out other zones */
+      for(int z = 1; z < nzones; ++z) {
+
+	int minTempIdx = 11 * z + 1;
+	int maxTempIdx = 11 * z + 2;
+
+	c9[ maxTempIdx + 1 ] *= -1.0;
+	c9[ maxTempIdx + 2 ] *= -1.0;
+	
+	out << "    } else if(tt0 > " << c9[ minTempIdx ]
+	    << " && tt0 < " << c9[ maxTempIdx ]
+	    <<  ") {" << std::endl;
+
+	out << "      " << fmt("s0_R", k) << " = ";
+	writeCoeffTimesVar(false, c9[ maxTempIdx + 9 ], "", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 3 ], " * tt6",  out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 4 ], " * tt0", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 5 ], " * 0.50 * tt1", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 6 ], " * OneThird * tt2", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 7 ], " * 0.25 * tt3", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 1 ], " * 0.50 * tt5", out);
+	writeCoeffTimesVar(true,  c9[ maxTempIdx + 2 ], " * tt4;", out);
+	out << std::endl;    
+
+      }
+      
       out << "    };" << std::endl;
       out << std::endl;
 
@@ -755,13 +1156,22 @@ void chemGen::writeSpeciesEntropies(std::ostream& out) {
 
 void chemGen::writeSpeciesGibbs(std::ostream& out) {
 
-  if( m_temp == true ) { out << "  template <class Type>" << std::endl; } 
-  out << "  void getGibbsFunctions_RT(" << m_baseType << "& T, std::vector<"
-      << m_baseType << ">& g0_RT) {" << std::endl;
+  /* write function name */
+  writeFunctionName( out, "GasThermo", "getGibbsFunctions_RT" );
+
+  /* arguments */
+  out << "("
+      << m_dataType << "& T, std::vector<"
+      << m_dataType << ">& g0_RT"
+      << ") {" << std::endl;
   out << std::endl;
-  out << "    std::vector<" << m_baseType << "> h0_RT(kk, 0.0);" << std::endl;
-  out << "    std::vector<" << m_baseType << "> s0_R(kk, 0.0);"  << std::endl;
+
+  /* declarations */
+  out << "    std::vector<" << m_dataType << "> h0_RT(kk, 0.0);" << std::endl;
+  out << "    std::vector<" << m_dataType << "> s0_R(kk, 0.0);"  << std::endl;
   out << std::endl;
+
+  /* write out the code */
   out << "    getEnthalpies_RT(T, h0_RT);" << std::endl;
   out << "    getEntropies_R(T, s0_R);"    << std::endl;
   out << "    for(int k = 0; k < kk; ++k) { g0_RT[k] = h0_RT[k] - s0_R[k]; }" << std::endl;
@@ -778,17 +1188,29 @@ void chemGen::writeEquilibriumConstants(std::ostream& out) {
   std::vector<int>         reacIndices;
   std::vector<int>         prodIndices;
 
-  if( m_temp == true ) { out << "  template <class Type>" << std::endl; }
-  out << "  void getEquilibriumConstants(" << m_baseType << "& T, std::vector<"
-      << m_baseType << ">& keq) {" << std::endl;
+  /* write function name */
+  writeFunctionName( out, "GasThermo", "getEquilibriumConstants" );
+  
+  /* arguments*/
+  out << "(";
+  if( m_ooriented == true ) { out << m_baseType; } else { out << m_dataType; }
+  out << "& T, std::vector<"
+      << m_dataType << ">& keq";
+  out << ") {" << std::endl;
   out << std::endl;
-  out << "    double            p0 = OneAtm;"          << std::endl;
-  out << "    " << m_baseType << "              RT = GasConstant * T;" << std::endl;
-  out << "    " << m_baseType << "              C0 = p0 / RT;"         << std::endl;
-  out << "    std::vector<" << m_baseType << "> g0_RT(kk, 0.0);"       << std::endl;
+
+  /* declarations*/
+  out << "    ";
+  if( m_ooriented == true ) { out << m_baseType; } else { out << m_dataType; }
+  out << " p0 = OneAtm;"          << std::endl;
+  out << "    " << m_dataType << " RT = GasConstant * T;" << std::endl;
+  out << "    " << m_dataType << " C0 = p0 / RT;"         << std::endl;
+  out << "    std::vector<" << m_dataType << "> g0_RT(kk, 0.0);"       << std::endl;
   out << std::endl;
-  out << "    getGibbsFunctions_RT(T, g0_RT);"    << std::endl;
-  out << "    for(int k = 0; k < kk; ++k) { g0_RT[k] = exp(g0_RT[k]); }" << std::endl;
+
+  /* write out the code */
+  out << "    getGibbsFunctions_RT( T, g0_RT );"    << std::endl;
+  out << "    for(int k = 0; k < kk; ++k) { g0_RT[k] = exp( g0_RT[k] ); }" << std::endl;
   out << std::endl;
   
   for(int i = 0; i < m_gas->nReactions(); ++i) {
@@ -796,18 +1218,23 @@ void chemGen::writeEquilibriumConstants(std::ostream& out) {
     reaction = m_gas->reaction(i);
     
     if(reaction->reversible == true) {
+
+      //std::cout << " ... " << reaction->equation() << std::endl;
       
       getParticipatingSpecies(reaction, reacIndices, prodIndices);
       
       int dn = prodIndices.size() - reacIndices.size();
       std::string revSpecies = multiply("g0_RT", prodIndices); 
       std::string fwdSpecies = multiply("g0_RT", reacIndices);
+
+      //std::cout << " ... " << dn << std::endl;
+      //std::cout << std::endl;
  
       out << "    " << fmt("keq",i) << " = ";
       if(dn < 0) { out << " C0 * "; }
       out << "( " << revSpecies << " ) / "
 	  << "( " << fwdSpecies;
-      if(dn > 0) { out << " * C0 "; }
+      if(dn > 0) { for(int n = 0; n < dn; ++n) { out << " * C0 "; } }
       out << " );" << std::endl;
       
     }
@@ -822,21 +1249,34 @@ void chemGen::writeEquilibriumConstants(std::ostream& out) {
 
 void chemGen::writeNewtonTemperature(std::ostream& out) {
 
-  if( m_temp == true ) { out << "  template <class Type>" << std::endl; }
-  out << "  void getTemperature(double& h, double& Told, std::vector<"
-      << m_baseType << ">& y, " << m_baseType << "& T) {" << std::endl;
+  /* write function name */
+  writeFunctionName( out, "GasThermo", "getTemperature" );
+  
+  /* arguments */
+  out << "(";
+  if( m_ooriented == true ) { out << m_baseType; } else { out << m_dataType; }
+  out << "& h, ";
+  if( m_ooriented == true ) { out << m_baseType; } else { out << m_dataType; }
+  out <<"& Told, std::vector<"
+      << m_dataType << ">& y, "
+      << m_dataType << "& T";
+  out << ") {" << std::endl;
   out << std::endl;
-  out << "    double            tol   = 1.0e-06;" << std::endl;
-  out << "    int               niter = 500;"     << std::endl;
-  out << "    " << m_baseType << "              RT;"              << std::endl;
-  out << "    " << m_baseType << "              To;"              << std::endl;
-  out << "    " << m_baseType << "              Tp;"              << std::endl;
-  out << "    " << m_baseType << "              dT = 1.0;"        << std::endl;
-  out << "    " << m_baseType << "              fy = h;"          << std::endl;
-  out << "    " << m_baseType << "              jy = 0.0;"        << std::endl;
-  out << "    std::vector<" << m_baseType << "> hk(kk, 0.0);"     << std::endl;
-  out << "    std::vector<" << m_baseType << "> cpk(kk, 0.0);"    << std::endl;
+  
+  /* declarations */
+  out << "    double tol   = 1.0e-06;" << std::endl;
+  out << "    int    niter = 500;"     << std::endl;
+  out << "    " << m_dataType << " RT;"              << std::endl;
+  out << "    " << m_dataType << " To;"              << std::endl;
+  out << "    " << m_dataType << " Tp;"              << std::endl;
+  out << "    " << m_dataType << " dT = 1.0;"        << std::endl;
+  out << "    " << m_dataType << " fy = h;"          << std::endl;
+  out << "    " << m_dataType << " jy = 0.0;"        << std::endl;
+  out << "    std::vector<" << m_dataType << "> hk(kk, 0.0);"     << std::endl;
+  out << "    std::vector<" << m_dataType << "> cpk(kk, 0.0);"    << std::endl;
   out << std::endl;
+
+  /* write out the code */
   out << "    To = Told;" << std::endl;
   out << "    Tp = Told;" << std::endl;
   out << std::endl;
@@ -857,7 +1297,7 @@ void chemGen::writeNewtonTemperature(std::ostream& out) {
   out << std::endl;
   out << "      if( (std::fabs(dT) < tol)) {" << std::endl;
   out << "	T = Tp;" << std::endl;
-  out << "	return;" << std::endl;
+  out << "	break; " << std::endl;
   out << "      }" << std::endl;
   out << std::endl;
   out << "      fy = h;"   << std::endl;
@@ -886,14 +1326,23 @@ void chemGen::getParticipatingSpecies(std::shared_ptr<Cantera::Reaction>& reacti
       iter != reactantsMap.end();
       ++iter) {
     reacIndices.push_back( m_gas->speciesIndex(iter->first) );
-    if(iter->second == 2.0) { reacIndices.push_back( m_gas->speciesIndex(iter->first) ); }
+    if(iter->second > 1.0) {
+      int nu = (int)iter->second;      
+      for(int k = 0; k < nu-1; ++k) { reacIndices.push_back( m_gas->speciesIndex(iter->first) ); }
+    }
   }
 
+  // for(int k = 0; k < reacIndices.size(); ++k) { std::cout << m_gas->speciesName( reacIndices[k] ) << "\t"; }
+  // std::cout << std::endl;
+  
   for(Cantera::Composition::const_iterator iter = productsMap.begin();
       iter != productsMap.end();
       ++iter) {
     prodIndices.push_back( m_gas->speciesIndex(iter->first) );
-    if(iter->second == 2.0) { prodIndices.push_back( m_gas->speciesIndex(iter->first) ); }
+    if(iter->second > 1.0) {
+      int nu = (int)iter->second;     
+      for(int k = 0; k < nu-1; ++k) { prodIndices.push_back( m_gas->speciesIndex(iter->first) ); }
+    }
   }
   
 }
@@ -929,3 +1378,26 @@ int chemGen::nFalloff() {
   return(nfall);
   
 };
+
+void chemGen::writeFunctionName(std::ostream& out,
+				const std::string& className,
+				const std::string& funName) {
+
+  if( m_templated == true && m_ooriented == true ) {
+    
+    out << "  template <class " << m_baseType << ">" << std::endl;
+    out << "  template <class " << m_dataType << ">" << std::endl;
+    
+  } else if( m_templated == true && m_ooriented == false ) {
+    
+    out << "  template <class " << m_dataType << ">" << std::endl;
+    
+  }
+
+  if( m_ooriented == true ) {
+    out << "  void " << className << "<" << m_baseType << ">::" << funName;
+  } else {
+    out << "  void " << funName;
+  }
+  
+}

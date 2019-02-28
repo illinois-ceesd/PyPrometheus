@@ -1,9 +1,13 @@
+apps/
+ffm/
+src/wolfChemGen.cpp
 src/*~
 include/*~
 build/*~
 test/*~
 run/*~
 run/ctis/*~
+run/outputData/
 run/outputData/*~
 run/outputData/*.nb  
 

@@ -1,28 +1,32 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include "opts.h"
 #include "chemGen.h"
 #include "cantera/IdealGasMix.h"
 
 using namespace std;
 
-int main() {
+int main(int argc, char** argv) {
 
   /* iostream format */
   cout.precision(4);
   cout.setf(ios::scientific);
 
+  /* load options */
+  opts cgopts;
+  if( argc > 1 ) { cgopts.loadOpts( argv[1] ); }
+  
   /* ideal gas mixture */
-  bool templated = false;
-  std::string  mech = "gri30";
-  std::string  ctif = "ctis/"+mech+".cti";
-  std::string  outf = mech+".cpp";
-  std::ofstream out(outf.c_str());
+  bool ooriented    = cgopts.ooriented();
+  bool templated    = cgopts.templated();
+  std::string  mech = cgopts.mech();
+  std::string  ctif = "ctis/"+mech+".xml";
   Cantera::IdealGasMix gas(ctif,"gas");
 
   /* run solver */
-  chemGen gen(templated, gas);
-  gen.writeMech(out);
+  chemGen gen( ooriented, templated, mech, gas );
+  gen.writeMech();
   
   return(0);
 }
