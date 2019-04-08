@@ -8,6 +8,7 @@ build/*~
 test/*~
 run/*~
 run/*.exe
+run/*.h
 run/ctis/*~
 run/outputData/
 run/outputData/*~
