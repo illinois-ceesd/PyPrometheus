@@ -565,7 +565,7 @@ void Prometheus::writeRateCoefficients(std::ostream& out) {
   out << "    std::vector<" << m_baseType << "> keq(ii,0.0);"   << std::endl;
   out << std::endl;
   out << "    getEquilibriumConstants(T, keq);" << std::endl;
-  out << "    for(int i = 0; i < ii; ++i) { g0_RT[i] = exp( g0_RT[i] ); }" << std::endl;
+  out << "    for(int i = 0; i < ii; ++i) { keq[i] = exp( keq[i] ); }" << std::endl;
   out << "    for(int i = 0; i < ii; ++i) { if( keq[i] > BigNumber ) { keq[i] = BigNumber; } }" << std::endl;
   out << std::endl;
 
