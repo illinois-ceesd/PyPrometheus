@@ -1,2 +1,2 @@
 rm -f *.exe
-ln -sf ../build/chemGen.exe .
+ln -sf ../build/Prometheus.exe .

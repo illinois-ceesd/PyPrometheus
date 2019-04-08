@@ -1,10 +1,10 @@
 include $(WORK)/cantera-2.2.1/cantera-2.2.1/include/cantera/Cantera.mak
 
-SRCDIR = $(PROJ)/chemGen/src
-INCDIR = $(PROJ)/chemGen/include
-TSTDIR = $(PROJ)/chemGen/test
-APPDIR = ${PROJ}/chemGen/apps
-RUNDIR = $(PROJ)/chemGen/run
+SRCDIR = $(PROJ)/Prometheus/src
+INCDIR = $(PROJ)/Prometheus/include
+TSTDIR = $(PROJ)/Prometheus/test
+APPDIR = ${PROJ}/Prometheus/apps
+RUNDIR = $(PROJ)/Prometheus/run
 
 CXX   = g++ -std=c++11
 FLAG  = -g -O0
@@ -12,7 +12,7 @@ LIBS  = $(CANTERA_LIBS)
 INCS  = -I$(INCDIR)
 INCS += $(CANTERA_INCLUDES)
 
-all: test wolf exec
+all: test exec
 
 test: testSanDiego testSanDiegoFull testGRI30
 
@@ -25,11 +25,8 @@ testSanDiegoFull: sanDiegoFull.o testSanDiegoFull.o
 testGRI30: gri30.o testGRI30.o
 	$(CXX) -o testGRI30.exe gri30.o testGRI30.o $(LIBS)
 
-wolf: utils.o opts.o wolfChemGen.o wolf.o
-	$(CXX) -o wolf.exe utils.o opts.o wolfChemGen.o wolf.o $(LIBS)
-
-exec: utils.o opts.o chemGen.o driver.o
-	$(CXX) -o chemGen.exe utils.o opts.o chemGen.o driver.o $(LIBS)
+exec: utils.o opts.o Prometheus.o driver.o
+	$(CXX) -o Prometheus.exe utils.o opts.o Prometheus.o driver.o $(LIBS)
 
 utils.o: $(SRCDIR)/utils.cpp
 	$(CXX) -c $(FLAG) $< $(INCS)
@@ -37,10 +34,7 @@ utils.o: $(SRCDIR)/utils.cpp
 opts.o: $(SRCDIR)/opts.cpp
 	$(CXX) -c $(FLAG) $< $(INCS)
 
-wolfChemGen.o: $(SRCDIR)/wolfChemGen.cpp utils.o
-	$(CXX) -c $(FLAG) $< $(INCS)
-
-chemGen.o: $(SRCDIR)/chemGen.cpp utils.o
+Prometheus.o: $(SRCDIR)/Prometheus.cpp utils.o
 	$(CXX) -c $(FLAG) $< $(INCS)
 
 sanDiego.o: $(SRCDIR)/sanDiego.cpp
@@ -61,10 +55,7 @@ testSanDiegoFull.o: $(TSTDIR)/testSanDiegoFull.cpp
 testGRI30.o: $(TSTDIR)/testGRI30.cpp
 	$(CXX) -c $(FLAG) $< $(INCS)
 
-wolf.o: $(APPDIR)/wolf.cpp wolfChemGen.o
-	$(CXX) -c $(FLAG) $< $(INCS)
-
-driver.o: $(SRCDIR)/driver.cpp chemGen.o
+driver.o: $(SRCDIR)/driver.cpp Prometheus.o
 	$(CXX) -c $(FLAG) $< $(INCS)
 
 clean:

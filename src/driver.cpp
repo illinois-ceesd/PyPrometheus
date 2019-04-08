@@ -2,7 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include "opts.h"
-#include "chemGen.h"
+#include "Prometheus.h"
 #include "cantera/IdealGasMix.h"
 
 using namespace std;
@@ -14,18 +14,18 @@ int main(int argc, char** argv) {
   cout.setf(ios::scientific);
 
   /* load options */
-  opts cgopts;
-  if( argc > 1 ) { cgopts.loadOpts( argv[1] ); }
+  opts genOpts;
+  if( argc > 1 ) { genOpts.loadOpts( argv[1] ); }
   
   /* ideal gas mixture */
-  bool ooriented    = cgopts.ooriented();
-  bool templated    = cgopts.templated();
-  std::string  mech = cgopts.mech();
-  std::string  ctif = "ctis/" + mech + ".cti";
+  bool ooriented    = genOpts.ooriented();
+  bool templated    = genOpts.templated();
+  std::string  mech = genOpts.mech();
+  std::string  ctif = "ctis/" + mech + ".xml";
   Cantera::IdealGasMix gas( ctif, "gas" );
 
   /* run solver */
-  chemGen gen( ooriented, templated, mech, gas );
+  Prometheus gen( ooriented, templated, mech, gas );
   gen.writeMech();
   
   return(0);

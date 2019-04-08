@@ -1,11 +1,11 @@
-#include "chemGen.h"
+#include "Prometheus.h"
 
-void chemGen::greetings() {
+void Prometheus::greetings() {
 
   std::cout.setf(std::ios::scientific);
   std::cout.precision(6);
 
-  std::cout << "Welcome to chemGen..." << std::endl;
+  std::cout << "Welcome to Prometheus..." << std::endl;
   std::cout << "Working with " << m_mech << " mech..." << std::endl;
   std::cout << "Number of species:   " << m_gas->nSpecies()   << std::endl;
   std::cout << "Number of elements:  " << m_gas->nElements()  << std::endl;
@@ -19,7 +19,7 @@ void chemGen::greetings() {
   
 }
 
-void chemGen::writeMech() {
+void Prometheus::writeMech() {
 
   std::string   filename;
   std::ofstream out;
@@ -37,7 +37,7 @@ void chemGen::writeMech() {
     
   } else {
 
-    filename = m_mech+".cpp";
+    filename = m_mech+".h";
     out.open( filename.c_str() );
     writeDefs( out );
     
@@ -58,7 +58,7 @@ void chemGen::writeMech() {
   
 }
 
-void chemGen::writeDefs(std::ostream& out) {
+void Prometheus::writeDefs(std::ostream& out) {
 
   double* mw = new double[m_gas->nSpecies()];
   m_gas->getMolecularWeights(mw);
@@ -76,6 +76,7 @@ void chemGen::writeDefs(std::ostream& out) {
   out << "  double OneAtm      = 1.01325e5;"     << std::endl;
   out << "  double OneThird    = 1.0 / 3.0;"     << std::endl;
   out << "  double GasConstant = 8314.4621;"     << std::endl;
+  out << "  double BigNumber   = 1.0e300;"       << std::endl; 
   out << std::endl;
   out << "  std::vector<double> mw = { ";
   for(int k = 0; k < m_gas->nSpecies(); ++k) {
@@ -90,7 +91,7 @@ void chemGen::writeDefs(std::ostream& out) {
   
 }
 
-void chemGen::writeKineticsHeader(std::ostream& out) {
+void Prometheus::writeKineticsHeader(std::ostream& out) {
 
   int ii = m_gas->nReactions();
   int ff = nFalloff();
@@ -133,7 +134,7 @@ void chemGen::writeKineticsHeader(std::ostream& out) {
   
 }
 
-void chemGen::writeThermoHeader(std::ostream& out) {
+void Prometheus::writeThermoHeader(std::ostream& out) {
 
   int mm = m_gas->nElements();
   int kk = m_gas->nSpecies();
@@ -335,16 +336,20 @@ void chemGen::writeThermoHeader(std::ostream& out) {
   
 }
 
-void chemGen::writeKinetics(std::ostream& out) {
+void Prometheus::writeKinetics(std::ostream& out) {
 
+  std::cout << "\t ... Writing falloff kinetics ... " << std::endl;
   writeFalloffKinetics(out);
+  std::cout << "\t ... Writing rate coefficients ... " << std::endl;
   writeRateCoefficients(out);
+  std::cout << "\t ... Writing reation rates ... " << std::endl;
   writeNetRatesOfProgress(out);
+  std::cout << "\t ... Writing species production rates ... " << std::endl;
   writeNetProductionRates(out);
 
 }
 
-void chemGen::writeThermo(std::ostream& out) {
+void Prometheus::writeThermo(std::ostream& out) {
 
   std::cout << "\t ... Writing specific heats ... " << std::endl;
   writeSpeciesSpecificHeats(out);
@@ -367,7 +372,7 @@ void chemGen::writeThermo(std::ostream& out) {
   
 }
 
-void chemGen::writeFalloffKinetics(std::ostream& out) {
+void Prometheus::writeFalloffKinetics(std::ostream& out) {
 
   std::vector<int>                          falloffIndices;
   std::vector<int>                          falloffType;
@@ -543,7 +548,7 @@ void chemGen::writeFalloffKinetics(std::ostream& out) {
 
 }
 
-void chemGen::writeRateCoefficients(std::ostream& out) {
+void Prometheus::writeRateCoefficients(std::ostream& out) {
 
   std::vector<int>                   tbrIndices;
   std::vector<std::vector<double> >  tbrEfficiencies;
@@ -560,6 +565,8 @@ void chemGen::writeRateCoefficients(std::ostream& out) {
   out << "    std::vector<" << m_baseType << "> keq(ii,0.0);"   << std::endl;
   out << std::endl;
   out << "    getEquilibriumConstants(T, keq);" << std::endl;
+  out << "    for(int i = 0; i < ii; ++i) { g0_RT[i] = exp( g0_RT[i] ); }" << std::endl;
+  out << "    for(int i = 0; i < ii; ++i) { if( keq[i] > BigNumber ) { keq[i] = BigNumber; } }" << std::endl;
   out << std::endl;
 
   /* Arrhenius kinetics */
@@ -616,7 +623,7 @@ void chemGen::writeRateCoefficients(std::ostream& out) {
 
 }
 
-void chemGen::writeArrheniusKinetics(int& rxn, std::shared_ptr<Cantera::Reaction>& reaction,
+void Prometheus::writeArrheniusKinetics(int& rxn, std::shared_ptr<Cantera::Reaction>& reaction,
 				     std::ostream& out) {
 
   out.precision(6);
@@ -635,7 +642,7 @@ void chemGen::writeArrheniusKinetics(int& rxn, std::shared_ptr<Cantera::Reaction
 
 }
 
-void chemGen::writeNetRatesOfProgress(std::ostream& out) {
+void Prometheus::writeNetRatesOfProgress(std::ostream& out) {
 
   std::vector<int> reacIndices;
   std::vector<int> prodIndices;
@@ -685,7 +692,7 @@ void chemGen::writeNetRatesOfProgress(std::ostream& out) {
   
 }
 
-void chemGen::writeNetProductionRates(std::ostream& out) {
+void Prometheus::writeNetProductionRates(std::ostream& out) {
 
   std::vector<int> reacIndices;
   std::vector<int> prodIndices;
@@ -751,14 +758,15 @@ void chemGen::writeNetProductionRates(std::ostream& out) {
   
 }
 
-void chemGen::writeSpeciesSpecificHeats(std::ostream& out) {
+void Prometheus::writeSpeciesSpecificHeats(std::ostream& out) {
 
+  int    ncoeffGuess = 500;
   int    type;
   double minTemp;
   double maxTemp;
   double refPres;
   std::vector<double>  c(15);
-  std::vector<double> c9(200);
+  std::vector<double> c9(ncoeffGuess);
   //std::vector<double> c9(34);
 
   /* write function name */
@@ -842,7 +850,7 @@ void chemGen::writeSpeciesSpecificHeats(std::ostream& out) {
       writeCoeffTimesVar(true,  c9[3],  " * tt5", out);
       writeCoeffTimesVar(true,  c9[4],  " * tt4;", out);
       out << std::endl;
-
+      
       /* write out other zones */
       for(int z = 1; z < nzones; ++z) { 
 
@@ -877,14 +885,15 @@ void chemGen::writeSpeciesSpecificHeats(std::ostream& out) {
 
 }
 
-void chemGen::writeSpeciesEnthalpies(std::ostream& out) {
+void Prometheus::writeSpeciesEnthalpies(std::ostream& out) {
 
+  int    ncoeffGuess = 500;
   int    type;
   double minTemp;
   double maxTemp;
   double refPres;
   std::vector<double>  c(15);
-  std::vector<double> c9(200);
+  std::vector<double> c9(ncoeffGuess);
 
   /* write function name */
   writeFunctionName( out, "GasThermo", "getEnthalpies_RT" );
@@ -1015,14 +1024,15 @@ void chemGen::writeSpeciesEnthalpies(std::ostream& out) {
   
 }
 
-void chemGen::writeSpeciesEntropies(std::ostream& out) {
+void Prometheus::writeSpeciesEntropies(std::ostream& out) {
 
+  int    ncoeffGuess = 500;
   int    type;
   double minTemp;
   double maxTemp;
   double refPres;
   std::vector<double>  c(15);
-  std::vector<double> c9(200);
+  std::vector<double> c9(ncoeffGuess);
 
   /* write function name */
   writeFunctionName( out, "GasThermo", "getEntropies_R" );
@@ -1154,7 +1164,7 @@ void chemGen::writeSpeciesEntropies(std::ostream& out) {
   
 }
 
-void chemGen::writeSpeciesGibbs(std::ostream& out) {
+void Prometheus::writeSpeciesGibbs(std::ostream& out) {
 
   /* write function name */
   writeFunctionName( out, "GasThermo", "getGibbsFunctions_RT" );
@@ -1182,7 +1192,7 @@ void chemGen::writeSpeciesGibbs(std::ostream& out) {
 }
 
 
-void chemGen::writeEquilibriumConstants(std::ostream& out) {
+void Prometheus::writeEquilibriumConstants(std::ostream& out) {
 
   std::shared_ptr<Cantera::Reaction> reaction;
   std::vector<int>         reacIndices;
@@ -1210,7 +1220,7 @@ void chemGen::writeEquilibriumConstants(std::ostream& out) {
 
   /* write out the code */
   out << "    getGibbsFunctions_RT( T, g0_RT );"    << std::endl;
-  out << "    for(int k = 0; k < kk; ++k) { g0_RT[k] = exp( g0_RT[k] ); }" << std::endl;
+  //out << "    for(int k = 0; k < kk; ++k) { g0_RT[k] = exp( g0_RT[k] ); }" << std::endl;
   out << std::endl;
   
   for(int i = 0; i < m_gas->nReactions(); ++i) {
@@ -1219,22 +1229,17 @@ void chemGen::writeEquilibriumConstants(std::ostream& out) {
     
     if(reaction->reversible == true) {
 
-      //std::cout << " ... " << reaction->equation() << std::endl;
-      
       getParticipatingSpecies(reaction, reacIndices, prodIndices);
       
       int dn = prodIndices.size() - reacIndices.size();
-      std::string revSpecies = multiply("g0_RT", prodIndices); 
-      std::string fwdSpecies = multiply("g0_RT", reacIndices);
-
-      //std::cout << " ... " << dn << std::endl;
-      //std::cout << std::endl;
+      std::string revSpecies = increment("g0_RT", prodIndices); 
+      std::string fwdSpecies = increment("g0_RT", reacIndices);
  
       out << "    " << fmt("keq",i) << " = ";
-      if(dn < 0) { out << " C0 * "; }
-      out << "( " << revSpecies << " ) / "
+      if(dn < 0) { out << " C0 + "; }
+      out << "( " << revSpecies << " ) - "
 	  << "( " << fwdSpecies;
-      if(dn > 0) { for(int n = 0; n < dn; ++n) { out << " * C0 "; } }
+      if(dn > 0) { for(int n = 0; n < dn; ++n) { out << " + C0 "; } }
       out << " );" << std::endl;
       
     }
@@ -1247,7 +1252,7 @@ void chemGen::writeEquilibriumConstants(std::ostream& out) {
 
 }
 
-void chemGen::writeNewtonTemperature(std::ostream& out) {
+void Prometheus::writeNewtonTemperature(std::ostream& out) {
 
   /* write function name */
   writeFunctionName( out, "GasThermo", "getTemperature" );
@@ -1312,7 +1317,7 @@ void chemGen::writeNewtonTemperature(std::ostream& out) {
 
 }
 
-void chemGen::getParticipatingSpecies(std::shared_ptr<Cantera::Reaction>& reaction,
+void Prometheus::getParticipatingSpecies(std::shared_ptr<Cantera::Reaction>& reaction,
 				      std::vector<int>& reacIndices,
 				      std::vector<int>& prodIndices) {
 
@@ -1347,7 +1352,7 @@ void chemGen::getParticipatingSpecies(std::shared_ptr<Cantera::Reaction>& reacti
   
 }
 
-void chemGen::getThirdBodyEfficiencies(std::shared_ptr<Cantera::Reaction>& reaction,
+void Prometheus::getThirdBodyEfficiencies(std::shared_ptr<Cantera::Reaction>& reaction,
 				       std::vector<std::vector<double> >& tbrEfficiencies) {
 
   std::vector<double> efficiencies;
@@ -1366,7 +1371,7 @@ void chemGen::getThirdBodyEfficiencies(std::shared_ptr<Cantera::Reaction>& react
 
 }
 
-int chemGen::nFalloff() {
+int Prometheus::nFalloff() {
 
   int nfall = 0;
   for(int i = 0; i < m_gas->nReactions(); ++i) {
@@ -1379,7 +1384,7 @@ int chemGen::nFalloff() {
   
 };
 
-void chemGen::writeFunctionName(std::ostream& out,
+void Prometheus::writeFunctionName(std::ostream& out,
 				const std::string& className,
 				const std::string& funName) {
 

@@ -3,11 +3,11 @@
 #include "cantera/thermo/speciesThermoTypes.h"
 #include "utils.h"
 
-class chemGen
+class Prometheus
 {
  public:
     
-  chemGen(bool& ooriented, bool& templated, std::string& mech, Cantera::IdealGasMix& gas) {
+  Prometheus(bool& ooriented, bool& templated, std::string& mech, Cantera::IdealGasMix& gas) {
     m_gas  = &gas;
     m_mech = mech;
     m_ooriented = ooriented;
