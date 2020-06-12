@@ -5,12 +5,13 @@ void Prometheus::greetings() {
   std::cout.setf(std::ios::scientific);
   std::cout.precision(6);
 
-  std::cout << "Welcome to Prometheus..." << std::endl;
-  std::cout << "Working with " << m_mech << " mech..." << std::endl;
-  std::cout << "Number of species:   " << m_gas->nSpecies()   << std::endl;
-  std::cout << "Number of elements:  " << m_gas->nElements()  << std::endl;
-  std::cout << "Number of reactions: " << m_gas->nReactions() << std::endl;
-  std::cout << "The implementation will ";
+  std::string prometheus = "Prometheus: ";
+  std::cout << prometheus << "Welcome..." << std::endl;
+  std::cout << prometheus << "Working with " << m_mech  << " mech..." << std::endl;
+  std::cout << prometheus << "Number of species:   "    << m_gas->nSpecies()   << std::endl;
+  std::cout << prometheus << "Number of elements:  "    << m_gas->nElements()  << std::endl;
+  std::cout << prometheus << "Number of reactions: "    << m_gas->nReactions() << std::endl;
+  std::cout << prometheus << "The implementation will ";
   if( m_ooriented == false ) { std::cout << "not "; }
   std::cout << "be object-oriented..." << std::endl;
   std::cout << "The implementation will ";
@@ -99,9 +100,9 @@ void Prometheus::writeKineticsHeader(std::ostream& out) {
   out << "#ifndef MECH_THERMO" << std::endl;
   out << "#define MECH_THERMO" << std::endl;
 
-  out << "include <cmath>" << std::endl;
-  out << "include <vector>" << std::endl;
-  out << "include \"gasThermo.h\"" << std::endl;
+  out << "#include <cmath>" << std::endl;
+  out << "#include <vector>" << std::endl;
+  out << "#include \"gasThermo.h\"" << std::endl;
   out  << std::endl;
 
   out << "namespace mech {" << std::endl;

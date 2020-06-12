@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
   bool ooriented    = genOpts.ooriented();
   bool templated    = genOpts.templated();
   std::string  mech = genOpts.mech();
+  std::cout << mech << std::endl;
   std::string  ctif = "ctis/" + mech + ".xml";
   Cantera::IdealGasMix gas( ctif, "gas" );
 

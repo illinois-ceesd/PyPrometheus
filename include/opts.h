@@ -29,7 +29,7 @@ public:
   
 protected:
   bool m_class;
-  bool m_temp;
+  bool m_temp;  
   std::string m_filename;
   std::string m_mech;
 
