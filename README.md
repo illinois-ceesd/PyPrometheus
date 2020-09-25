@@ -11,6 +11,7 @@ Once you've installed Cantera, follow these steps to get PyPrometheus up and run
 - `cd build`
 - Open `makefile` and substitute your local Cantera path in line 1. 
 - `make`
+
 Note: a CMake-based build system is underway.
 
 # Running PyPrometheus
