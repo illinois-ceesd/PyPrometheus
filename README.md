@@ -19,7 +19,7 @@ There are two steps to using PyPrometheus: (i) generating the models and (ii) us
 
 ## Generating source-term source code
 Let's start with some preliminary definitions. We call the generated source code **Prometheus thermochemistry kernels** (PTK). To generate a PTK, we need an input config file. This file only needs to include two options:
-- `mech`: The name of the mechanism. Note that this has to match the name of the Cantera input file (in cti, xml, or yaml formats).
+- `mech`: The name of the mechanism. Note that this has to match the name of the Cantera input file. The only Cantera input format currently supported is cti.
 - `language`: The language in which the source term will be implemented. PyPrometheus supports Python and C++.
 We provide an example (inputs/sample_inputs.config). 
 
