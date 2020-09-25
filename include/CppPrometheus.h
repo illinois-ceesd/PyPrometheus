@@ -1,27 +1,34 @@
-#ifndef PYPROM
-#define PYPROM
+#ifndef CPPPROM
+#define CPPPROM
 
 #include "Prometheus.h"
 
-class PyPrometheus : public Prometheus
+class CppPrometheus : public Prometheus
 {
  public:
-    
-  PyPrometheus(Config& config,
-	       std::shared_ptr<Cantera::Solution> solution)
-    {
-	/* save model name */      
-	m_mech = config.mech();
-	/* save fixed thermo variables */
-	m_thermoXY = config.fixedThermoVars();
-	/* pointer to managers (ugh) */
-	m_thermo   = solution->thermo();
-	m_kinetics = solution->kinetics();
-	if(solution->transport() != NULL){
-	  m_transport = solution->transport();
-	}
-	
-      };
+
+  CppPrometheus(Config& config,
+		std::shared_ptr<Cantera::Solution> solution)
+   {
+      /* save model name */
+      m_mech = config.mech();
+      /* pointer to managers (ugh) */
+      m_thermo   = solution->thermo();
+      m_kinetics = solution->kinetics();
+      if( solution->transport() != NULL ) {
+	m_transport = solution->transport();
+      }
+      /* other options */
+      m_ooriented = config.ooriented();
+      m_templated = config.templated();
+      if( m_templated == true ) {
+	m_baseType = "ModelType";
+	m_dataType = "DataType";
+      } else {
+	m_baseType = "double";
+	m_dataType = "double";
+      }
+    };
 
   void Greetings();
   void WriteMech();
@@ -55,10 +62,15 @@ class PyPrometheus : public Prometheus
   void WriteNetProductionRates(std::ostream& out);
 
   void WriteFunctionName(std::ostream& out,
-			 const std::string& funName);
-  void WriteFunctionArguments(std::ostream& out,
-			      const std::vector<std::string>& args);
+			 const std::string& className,
+			 const std::string& funName);  
   
+ private:
+  bool m_ooriented;
+  bool m_templated;
+  std::string m_baseType;
+  std::string m_dataType;
+
 };
 
 #endif

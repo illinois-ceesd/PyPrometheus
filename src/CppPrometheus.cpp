@@ -1,12 +1,13 @@
-#include "Prometheus.h"
+#include "CppPrometheus.h"
 
-void Prometheus::Greetings() {
+void CppPrometheus::Greetings() {
 
   std::cout.setf(std::ios::scientific);
   std::cout.precision(6);
 
   std::string prometheus = "Prometheus: ";
   std::cout << prometheus << "Welcome..." << std::endl;
+  std::cout << prometheus << "Generating C++ thermochemistry source code..." << std::endl;
   std::cout << prometheus << "Working with " << m_mech  << " mech..." << std::endl;
   std::cout << prometheus << "Number of species:   "    << m_thermo->nSpecies()     << std::endl;
   std::cout << prometheus << "Number of elements:  "    << m_thermo->nElements()    << std::endl;
@@ -22,7 +23,7 @@ void Prometheus::Greetings() {
   
 }
 
-void Prometheus::WriteMech() {
+void CppPrometheus::WriteMech() {
 
   std::string   filename;
   std::ofstream out;
@@ -55,7 +56,7 @@ void Prometheus::WriteMech() {
 ///
 /// Definitions
 ///
-void Prometheus::WriteDefinitions(std::ostream& out) {
+void CppPrometheus::WriteDefinitions(std::ostream& out) {
 
   
   out << "... Nothing to see here yet ... " << std::endl;
@@ -63,33 +64,44 @@ void Prometheus::WriteDefinitions(std::ostream& out) {
 }
 
 ///
+/// State
+///
+void CppPrometheus::WriteDensity(std::ostream& out) {
+    
+}
+
+void CppPrometheus::WritePressure(std::ostream& out) {
+    
+}
+
+void CppPrometheus::WriteMixMolecularWeight(std::ostream& out) {
+    
+}
+
+void CppPrometheus::WriteConcentrations(std::ostream& out) {
+
+}
+
+///
 /// Thermo
 ///
-void Prometheus::WriteThermo(std::ostream& out) {
-
-  std::string prometheus = "Prometheus:Thermo: ";
-  
-  std::cout << prometheus << " Writing specific heats ... " << std::endl;
-  WriteSpeciesSpecificHeats( out );
-  
-  std::cout << prometheus << " Writing enthalpies ... " << std::endl;
-  WriteSpeciesEnthalpies( out );
-
-  std::cout << prometheus << " Writing entropies ... " << std::endl;
-  WriteSpeciesEntropies( out );
-
-  std::cout << prometheus << " Writing Gibbs functions ... " << std::endl;
-  WriteSpeciesGibbs( out );
-
-  std::cout << prometheus << " Writing equilibrium constants ... " << std::endl;
-  WriteEquilibriumConstants( out );
-
-  std::cout << prometheus << " Writing Newton method for temperature inversion ... " << std::endl;
-  WriteNewtonTemperature( out );
+void CppPrometheus::WriteMixtureSpecificHeatConstantPressure(std::ostream& out) {
   
 }
 
-void Prometheus::WriteSpeciesSpecificHeats(std::ostream& out) {
+void CppPrometheus::WriteMixtureSpecificHeatConstantVolume(std::ostream& out) {
+  
+}
+
+void CppPrometheus::WriteMixtureEnthalpy(std::ostream& out) {
+  
+}
+
+void CppPrometheus::WriteMixtureInternalEnergy(std::ostream& out) {
+  
+}
+
+void CppPrometheus::WriteSpeciesSpecificHeats(std::ostream& out) {
 
   int    ncoeffGuess = 500;
   int    type;
@@ -104,35 +116,49 @@ void Prometheus::WriteSpeciesSpecificHeats(std::ostream& out) {
   
 }
 
-void Prometheus::WriteSpeciesEnthalpies(std::ostream& out) {
+void CppPrometheus::WriteSpeciesEnthalpies(std::ostream& out) {
   
 }
 
-void Prometheus::WriteSpeciesEntropies(std::ostream& out) {
+void CppPrometheus::WriteSpeciesEntropies(std::ostream& out) {
   
 }
 
-void Prometheus::WriteSpeciesGibbs(std::ostream& out) {
+void CppPrometheus::WriteSpeciesGibbs(std::ostream& out) {
   
 }
 
-void Prometheus::WriteEquilibriumConstants(std::ostream& out) {
+void CppPrometheus::WriteEquilibriumConstants(std::ostream& out) {
   
 }
 
-void Prometheus::WriteNewtonTemperature(std::ostream& out) {
+void CppPrometheus::WriteNewtonTemperature(std::ostream& out) {
   
 }
 
-void Prometheus::WriteKinetics(std::ostream& out) {
+void CppPrometheus::WriteFalloffKinetics(std::ostream& out) {
 
 }
 
-void Prometheus::WriteTransport(std::ostream& out) {
+void CppPrometheus::WriteRateCoefficients(std::ostream& out) {
 
 }
 
-void Prometheus::WriteFunctionName(std::ostream& out,
+void CppPrometheus::WriteArrheniusKinetics(int& rxn,
+					  std::shared_ptr<Cantera::Reaction>& reaction,
+					  std::ostream& out) {
+
+}
+
+void CppPrometheus::WriteNetRatesOfProgress(std::ostream& out) {
+
+}
+
+void CppPrometheus::WriteNetProductionRates(std::ostream& out) {
+
+}
+
+void CppPrometheus::WriteFunctionName(std::ostream& out,
 				   const std::string& className,
 				   const std::string& funName) {
   

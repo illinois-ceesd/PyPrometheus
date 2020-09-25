@@ -1,6 +1,5 @@
 set -x
 
 cd ../build
-make realclean all
+make
 cd ../run
-sh link.sh
