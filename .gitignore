@@ -5,3 +5,4 @@ examples/*.pyc
 run/
 build/*.o
 build/*.exe
+ffm/
