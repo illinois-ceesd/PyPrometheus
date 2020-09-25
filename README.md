@@ -8,8 +8,10 @@ PyPrometheus manages source-term parameterization through Cantera (https://www.c
 
 # Installation
 Once you've installed Cantera, follow these steps to get PyPrometheus up and running.
-- cd build
-- make
+- `cd build`
+- Open `makefile` and substitute your local Cantera path in line 1. 
+- `make`
+Note: a CMake-based build system is underway.
 
 # Running PyPrometheus
 There are two steps to using PyPrometheus: (i) generating the models and (ii) using them in reactive flow simulations.
@@ -22,7 +24,7 @@ We provide an example (inputs/sample_inputs.config).
 
 After customizinng the input file, we can generate a PTK by typing:
 `build/Prometheus.exe <my_input.config>`
-Prometheus will then produce a `mech`.py or `mech`.H.
+Prometheus will then produce a `mech.py` or `mech.H.`
 
 ## Using generated code
 At this point, we have a PTK, but how do we even use it? We provide an in-depth tutorial via the jupyter notebook `examples/tutorial_compute_source_terms.ipynb`.
