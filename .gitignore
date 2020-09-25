@@ -6,3 +6,4 @@ run/
 build/*.o
 build/*.exe
 ffm/
+deprecated/
