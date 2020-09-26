@@ -25,7 +25,7 @@ We provide an example (inputs/sample_inputs.config).
 
 After customizinng the input file, we can generate a PTK by typing:
 `build/Prometheus.exe <my_input.config>`
-Prometheus will then produce a `mech.py` or `mech.H.`
+Prometheus will then produce a `mech.py` or `mech.H`.
 
 ## Using generated PTKs (source code)
 At this point, we have a PTK, but how do we even use it? We provide an in-depth tutorial via the jupyter notebook `examples/tutorial_compute_source_terms.ipynb`. Simply cd into `tutorials` and launch jupyter with `jupyter notebook`.
