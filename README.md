@@ -7,7 +7,7 @@ Chemical source terms have models for reaction rates (e.g., Arrhenius rate coeff
 PyPrometheus manages source-term parameterization through Cantera (https://www.cantera.org). We recommend the latest version. There are no other dependencies. 
 
 # Installation
-Once you've installed Cantera, follow these steps to get PyPrometheus up and running.
+Once you've installed Cantera, follow these steps to compile PyPrometheus.
 - `cd build`
 - Open `makefile` and substitute your local Cantera path in line 1. 
 - `make`
@@ -28,9 +28,8 @@ After customizinng the input file, we can generate a PTK by typing:
 Prometheus will then produce a `mech.py` or `mech.H.`
 
 ## Using generated PTKs (source code)
-At this point, we have a PTK, but how do we even use it? We provide an in-depth tutorial via the jupyter notebook `examples/tutorial_compute_source_terms.ipynb`.
+At this point, we have a PTK, but how do we even use it? We provide an in-depth tutorial via the jupyter notebook `examples/tutorial_compute_source_terms.ipynb`. Simply cd into `tutorials` and launch jupyter with `jupyter notebook`.
 
 # Authors
 - Esteban Cisneros
 - Michael Anderson
-- Michael Campbell
