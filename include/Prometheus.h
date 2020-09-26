@@ -201,10 +201,23 @@ class Prometheus
 
     reacIndices.clear();
     prodIndices.clear(); 
-  
+
+    Cantera::Composition ordersMap    = reaction->orders;
     Cantera::Composition reactantsMap = reaction->reactants;
     Cantera::Composition productsMap  = reaction->products;
 
+    if(ordersMap.empty()){
+      std::cout << reaction->equation() << " has an empty orders map" << std::endl;
+    } else {
+      std::cout << reaction->equation() << " does not have an empty orders map" << std::endl;
+    }
+    
+    for(const auto& orderIter : reaction->orders){
+      std::cout << reaction->equation() << "\t"
+		<< orderIter.first << "\t" << orderIter.second << "\t"
+		<< std::endl;
+    }
+    
     for(Cantera::Composition::const_iterator iter = reactantsMap.begin();
 	iter != reactantsMap.end();
 	++iter) {
@@ -222,7 +235,7 @@ class Prometheus
 	++iter) {
       prodIndices.push_back( m_thermo->speciesIndex(iter->first) );
       if(iter->second > 1.0) {
-	int nu = (int)iter->second;     
+	int nu = (int)iter->second;
 	for(int k = 0; k < nu-1; ++k) {
 	  prodIndices.push_back( m_thermo->speciesIndex(iter->first) );
 	}

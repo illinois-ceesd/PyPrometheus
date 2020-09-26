@@ -26,7 +26,7 @@ void PyPrometheus::WriteMech() {
   Greetings();
 
   /* defs */
-  filename = m_mech + ".py";
+  filename = "prometheus_" + m_mech + ".py";
   out.open( filename.c_str() );
   WriteDefinitions( out );
 
@@ -812,7 +812,7 @@ void PyPrometheus::WriteRateCoefficients(std::ostream& out) {
   for(int i = 0; i < m_kinetics->nReactions(); ++i) {
 
     reaction = m_kinetics->reaction(i);
-
+    
     switch(reaction->reaction_type) {
 
     case Cantera::ELEMENTARY_RXN:
@@ -903,6 +903,8 @@ void PyPrometheus::WriteNetRatesOfProgress(std::ostream& out) {
   out << "        k_fwd, k_rev = self.get_rate_coefficients( T, C )" << std::endl;
   out << std::endl;
 
+  //[ecg] come back here to do global reactions
+  
   for(int i = 0; i < m_kinetics->nReactions(); ++i) {
 
     reaction = m_kinetics->reaction(i);

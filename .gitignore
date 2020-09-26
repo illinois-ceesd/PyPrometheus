@@ -1,7 +1,10 @@
 apps/
 src/*.swp
-examples/__pychace__
-examples/*.pyc
+tutorials/__pycache__
+tutorials/*.pyc
+tutorials/.ipynb_checkpoints/
+tutorials/Untitled*
+examples/__pycache__
 run/
 build/*.o
 build/*.exe

@@ -31,9 +31,9 @@ int main(int argc, char** argv) {
       return(1);
     }
   }
-  
+
   std::string mech  = config.mech();
-  std::string ctif  = "ctis/" + mech + ".cti";
+  std::string ctif  = "../inputs/" + mech + ".cti";
   std::shared_ptr<Cantera::Solution> solution = Cantera::newSolution( ctif, "gas", "None" );
 
   /* run solver */
