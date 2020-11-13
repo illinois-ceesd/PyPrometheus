@@ -49,6 +49,9 @@ class Prometheus
 
     std::string prometheus = "Prometheus:Thermo: ";
 
+    std::cout << prometheus << "Writing mixture gas constant ... " << std::endl;
+    WriteMixtureGasConstant( out );
+
     std::cout << prometheus << "Writing mixture specific heat (constant pressure) ... " << std::endl;
     WriteMixtureSpecificHeatConstantPressure( out );
 
@@ -124,6 +127,9 @@ class Prometheus
   ///
   /// Thermo
   ///
+  virtual void WriteMixtureGasConstant(std::ostream& out) {
+    ErrorMessage( "WriteMixtureSpecificHeatConstantPressure" );
+  };
   virtual void WriteMixtureSpecificHeatConstantPressure(std::ostream& out) {
     ErrorMessage( "WriteMixtureSpecificHeatConstantPressure" );
   };

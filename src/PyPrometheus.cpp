@@ -142,6 +142,25 @@ void PyPrometheus::WriteConcentrations(std::ostream& out) {
 ///
 /// Thermo
 ///
+void PyPrometheus::WriteMixtureGasConstant(std::ostream& out) {
+
+  /* write function name */
+  WriteFunctionName( out, "get_mixture_R" );
+  WriteFunctionArguments( out, { "Y" } );
+
+  out << "        " << "R_mix = 0.0" << std::endl;
+  for(int k = 0; k < m_thermo->nSpecies(); ++k) {
+    out << "        R += "
+	<< WriteAccess( "Y", k ) << " * "
+	<< WriteAccess( "self.iwts", k )
+	<< std::endl;
+  }
+  out << "        " << "R *= self.gas_constant" << std::endl;
+  out << "        " << "return R" << std::endl;
+  out << std::endl;
+
+}
+
 void PyPrometheus::WriteMixtureSpecificHeatConstantPressure(std::ostream& out) {
 
   /* write function name */
@@ -253,7 +272,7 @@ void PyPrometheus::WriteSpeciesSpecificHeats(std::ostream& out) {
   out << "        " << "tt1 = T * tt0"             << std::endl;
   out << "        " << "tt2 = T * tt1"             << std::endl;
   out << "        " << "tt3 = T * tt2"             << std::endl;
-  out << "        " << "tt4 = np.power( T, -1.0 )" << std::endl;
+  out << "        " << "tt4 = 1.0 / T" << std::endl;
   out << "        " << "tt5 = tt4 * tt4"           << std::endl;
   out << std::endl;
 

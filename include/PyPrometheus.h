@@ -35,6 +35,7 @@ class PyPrometheus : public Prometheus
   void WriteMixMolecularWeight(std::ostream& out);
   void WriteConcentrations(std::ostream& out);
 
+  void WriteMixtureGasConstant(std::ostream& out);
   void WriteMixtureSpecificHeatConstantPressure(std::ostream& out);
   void WriteMixtureSpecificHeatConstantVolume(std::ostream& out);
   void WriteMixtureEnthalpy(std::ostream& out);

@@ -43,6 +43,19 @@ class prometheus_thermochemistry_kernel():
         C = self.iwts * rho * Y
         return C
 
+    def get_mixture_R(self, Y):
+
+        R_mix = 0.0
+        R += Y[0] * self.iwts[0]
+        R += Y[1] * self.iwts[1]
+        R += Y[2] * self.iwts[2]
+        R += Y[3] * self.iwts[3]
+        R += Y[4] * self.iwts[4]
+        R += Y[5] * self.iwts[5]
+        R += Y[6] * self.iwts[6]
+        R *= self.gas_constant
+        return R
+    
     def get_mixture_specific_heat_cp_mass(self, T, Y):
 
         cp0_R = self.get_species_specific_heats_R( T )
@@ -309,12 +322,15 @@ class prometheus_thermochemistry_kernel():
         R_net = np.zeros( self.num_reactions )
         k_fwd, k_rev = self.get_rate_coefficients( T, C )
 
-        R_fwd[0] = k_fwd[0] * C[0] * C[1]
+        C_fu = np.max( 1.0e-15, C[0] )
+        C_ox = np.max( 1.0e-15, C[1] )
+        
+        R_fwd[0] = k_fwd[0] * np.sqrt( C_fu ) * np.power( C_ox, 0.65 )
 
-        R_fwd[1] = k_fwd[1] * C[3] * C[1]
+        R_fwd[1] = k_fwd[1] * C[3] * np.sqrt( C_ox )
         R_rev[1] = k_rev[1] * C[2]
 
-        R_fwd[2] = k_fwd[2] * C[5] * C[1]
+        R_fwd[2] = k_fwd[2] * C[5] * np.sqrt( C_ox )
         R_rev[2] = k_rev[2] * C[4]
 
         for i in range( 0, self.num_reactions ):
@@ -329,7 +345,7 @@ class prometheus_thermochemistry_kernel():
         omega = np.zeros( self.num_species )
 
         omega[0] =  - R_net[0]
-        omega[1] =  - R_net[0] - R_net[1] - R_net[2]
+        omega[1] =  - R_net[0] - 0.5 * R_net[1] - 0.5 * R_net[2]
         omega[2] =  + R_net[1]
         omega[3] =  + R_net[0] + R_net[0] - R_net[1]
         omega[4] =  + R_net[2]
